@@ -15,7 +15,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.utils.safestring import mark_safe
 
-from .models import User
+from .models import User, OTP
 
 
 @admin.register(User)
@@ -144,3 +144,60 @@ class UserAdmin(BaseUserAdmin):
         """Optimize queryset by selecting related fields."""
         qs = super().get_queryset(request)
         return qs.select_related()
+
+
+@admin.register(OTP)
+class OTPAdmin(admin.ModelAdmin):
+    """
+    Admin interface for OTP model.
+    
+    Provides admin interface for viewing and managing OTP codes.
+    """
+    
+    list_display = (
+        'email',
+        'otp_code',
+        'otp_type',
+        'is_verified',
+        'is_expired_display',
+        'created_at',
+        'expires_at',
+    )
+    
+    list_filter = (
+        'otp_type',
+        'is_verified',
+        'created_at',
+    )
+    
+    search_fields = (
+        'email',
+        'otp_code',
+    )
+    
+    readonly_fields = (
+        'email',
+        'otp_code',
+        'otp_type',
+        'is_verified',
+        'created_at',
+        'expires_at',
+        'is_expired_display',
+    )
+    
+    ordering = ('-created_at',)
+    
+    def is_expired_display(self, obj):
+        """Display if OTP is expired."""
+        if obj.is_expired():
+            return format_html('<span style="color: red;">Expired</span>')
+        return format_html('<span style="color: green;">Valid</span>')
+    is_expired_display.short_description = "Status"
+    
+    def has_add_permission(self, request):
+        """Disable adding OTPs manually through admin."""
+        return False
+    
+    def has_change_permission(self, request, obj=None):
+        """Disable editing OTPs through admin."""
+        return False

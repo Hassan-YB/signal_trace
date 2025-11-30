@@ -14,6 +14,9 @@ This project follows Django best practices where:
 from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
+from core.models import BaseDateTimeModel
+from django.utils import timezone
+from datetime import timedelta
 
 
 class User(AbstractUser):
@@ -76,6 +79,10 @@ class User(AbstractUser):
         if not extra_fields.get('username'):
             extra_fields['username'] = email
         
+        # Set is_active=False by default - user must verify OTP to activate account
+        if 'is_active' not in extra_fields:
+            extra_fields['is_active'] = False
+        
         user = cls(
             email=email,
             first_name=first_name or '',
@@ -97,3 +104,117 @@ class User(AbstractUser):
             bool: True if password is correct, False otherwise
         """
         return self.check_password(password) and self.is_active
+
+
+class OTP(BaseDateTimeModel):
+    """
+    OTP Model for email verification and password reset.
+    
+    Stores OTP codes for signup verification and password reset flows.
+    Uses fixed OTP code "123456" for now (will integrate email service later).
+    """
+    OTP_TYPE_CHOICES = [
+        ('signup', 'Signup'),
+        ('password_reset', 'Password Reset'),
+    ]
+    
+    email = models.EmailField()
+    otp_code = models.CharField(max_length=6)
+    otp_type = models.CharField(max_length=20, choices=OTP_TYPE_CHOICES)
+    is_verified = models.BooleanField(default=False)
+    expires_at = models.DateTimeField()
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['email', 'otp_type', 'is_verified']),
+        ]
+    
+    def __str__(self):
+        return f"{self.email} - {self.otp_type} - {self.otp_code}"
+    
+    def is_expired(self):
+        """Check if OTP has expired."""
+        return timezone.now() > self.expires_at
+    
+    def is_valid(self):
+        """Check if OTP is valid (not expired and not verified)."""
+        return not self.is_expired() and not self.is_verified
+    
+    @classmethod
+    def generate_otp(cls, email, otp_type):
+        """
+        Business logic: Generate and store OTP for email.
+        
+        For now, uses fixed OTP code "123456". Will integrate email service later.
+        
+        Args:
+            email: User's email address
+            otp_type: Type of OTP ('signup' or 'password_reset')
+        
+        Returns:
+            OTP instance
+        """
+        email = email.lower().strip()
+        
+        # Invalidate any existing unverified OTPs for this email and type
+        cls.objects.filter(
+            email=email,
+            otp_type=otp_type,
+            is_verified=False
+        ).update(is_verified=True)
+        
+        # Fixed OTP code for now
+        otp_code = "123456"
+        
+        # OTP expires in 10 minutes
+        expires_at = timezone.now() + timedelta(minutes=10)
+        
+        otp = cls.objects.create(
+            email=email,
+            otp_code=otp_code,
+            otp_type=otp_type,
+            expires_at=expires_at
+        )
+        
+        # TODO: Send OTP via email service
+        # For now, we just store it with fixed code
+        
+        return otp
+    
+    @classmethod
+    def verify_otp(cls, email, otp_code, otp_type):
+        """
+        Business logic: Verify OTP code.
+        
+        Args:
+            email: User's email address
+            otp_code: OTP code to verify
+            otp_type: Type of OTP ('signup' or 'password_reset')
+        
+        Returns:
+            tuple: (success: bool, otp_instance: OTP or None)
+        """
+        email = email.lower().strip()
+        
+        try:
+            otp = cls.objects.filter(
+                email=email,
+                otp_type=otp_type,
+                is_verified=False
+            ).latest('created_at')
+            
+            if not otp.is_valid():
+                return False, None
+            
+            if otp.otp_code != otp_code:
+                return False, None
+            
+            # Mark as verified
+            otp.is_verified = True
+            otp.save()
+            
+            return True, otp
+            
+        except cls.DoesNotExist:
+            return False, None

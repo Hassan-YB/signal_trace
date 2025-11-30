@@ -2,10 +2,10 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
-import Logo from '@/app/components/Layout/Header/Logo'
 import { useState } from 'react'
+import { Icon } from '@iconify/react/dist/iconify.js'
 import Loader from '@/app/components/Common/Loader'
-import { apiRequest, setTokens } from '@/utils/api'
+import { auth } from '@/lib/api'
 
 interface SignUpProps {
   onSuccess?: () => void
@@ -14,6 +14,8 @@ interface SignUpProps {
 const SignUp = ({ onSuccess }: SignUpProps) => {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -45,37 +47,36 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
     setErrors({})
 
     try {
-      const data = await apiRequest('/api/auth/signup/', {
-        method: 'POST',
-        body: JSON.stringify(formData),
-      }, false) // Public endpoint, don't send auth token
+      const response = await auth.signup(formData)
 
-      if (data.success) {
-        // Store tokens if provided (some signup flows return tokens directly)
-        if (data.data?.tokens) {
-          setTokens(data.data.tokens.access, data.data.tokens.refresh)
-          // Dispatch custom event to notify other components
-          window.dispatchEvent(new Event('authStateChanged'))
-        }
-        toast.success(data.message || 'Successfully registered')
+      if (response.success) {
+        toast.success(response.message || 'OTP sent to your email. Please verify to complete registration.')
         setLoading(false)
         // Close modal if callback provided
         if (onSuccess) {
           onSuccess()
         }
-        // If tokens were provided, redirect to profile, otherwise to signin
-        if (data.data?.tokens) {
-          router.push('/profile')
-        } else {
-          router.push('/signin')
+        // Redirect to OTP verification page with signup data
+        const signupData = {
+          first_name: formData.first_name,
+          last_name: formData.last_name,
+          password: formData.password,
+          password_confirm: formData.password_confirm,
         }
+        const queryParams = new URLSearchParams({
+          email: formData.email,
+          ...Object.fromEntries(
+            Object.entries(signupData).map(([key, value]) => [key, value])
+          ),
+        })
+        router.push(`/signup/verify?${queryParams.toString()}`)
       } else {
         // Handle errors
         const fieldErrors: typeof errors = {}
         
-        if (data.errors) {
-          Object.keys(data.errors).forEach((key) => {
-            const errorValue = data.errors[key]
+        if (response.errors) {
+          Object.keys(response.errors).forEach((key) => {
+            const errorValue = response.errors[key]
             if (Array.isArray(errorValue)) {
               fieldErrors[key as keyof typeof fieldErrors] = errorValue[0]
             } else if (typeof errorValue === 'string') {
@@ -94,7 +95,7 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
         setErrors(fieldErrors)
         
         // Show general error message
-        const errorMessage = data.message || 'Registration failed. Please check your information.'
+        const errorMessage = response.message || 'Registration failed. Please check your information.'
         toast.error(errorMessage)
         setLoading(false)
       }
@@ -106,9 +107,10 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
   }
 
   return (
-    <>
-      <div className='mb-10 text-center mx-auto inline-block max-w-[160px]'>
-        <Logo />
+    <div className='rounded-xl border border-gray-200 bg-slate-50 p-8 shadow-sm'>
+      <div className='mb-8'>
+        <h2 className='text-2xl font-bold text-gray-900'>Sign Up</h2>
+        <p className='mt-2 text-sm text-gray-600'>Create a new account to get started.</p>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -120,8 +122,8 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
             value={formData.first_name}
             onChange={handleChange}
             required
-            className={`w-full rounded-md border border-solid bg-transparent px-5 py-3 text-base text-dark outline-hidden transition border-gray-200 placeholder:text-black/30 focus:border-primary text-black focus-visible:shadow-none ${
-              errors.first_name ? 'border-red-500' : ''
+            className={`w-full rounded-lg border border-solid bg-white px-4 py-3 text-base text-gray-900 outline-none transition-all duration-200 border-gray-300 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+              errors.first_name ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
             }`}
           />
           {errors.first_name && (
@@ -136,8 +138,8 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
             value={formData.last_name}
             onChange={handleChange}
             required
-            className={`w-full rounded-md border border-solid bg-transparent px-5 py-3 text-base text-dark outline-hidden transition border-gray-200 placeholder:text-black/30 focus:border-primary text-black focus-visible:shadow-none ${
-              errors.last_name ? 'border-red-500' : ''
+            className={`w-full rounded-lg border border-solid bg-white px-4 py-3 text-base text-gray-900 outline-none transition-all duration-200 border-gray-300 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+              errors.last_name ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
             }`}
           />
           {errors.last_name && (
@@ -152,8 +154,8 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
             value={formData.email}
             onChange={handleChange}
             required
-            className={`w-full rounded-md border border-solid bg-transparent px-5 py-3 text-base text-dark outline-hidden transition border-gray-200 placeholder:text-black/30 focus:border-primary text-black focus-visible:shadow-none ${
-              errors.email ? 'border-red-500' : ''
+            className={`w-full rounded-lg border border-solid bg-white px-4 py-3 text-base text-gray-900 outline-none transition-all duration-200 border-gray-300 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+              errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
             }`}
           />
           {errors.email && (
@@ -161,33 +163,51 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
           )}
         </div>
         <div className='mb-[22px]'>
-          <input
-            type='password'
-            placeholder='Password'
-            name='password'
-            value={formData.password}
-            onChange={handleChange}
-            required
-            className={`w-full rounded-md border border-solid bg-transparent px-5 py-3 text-base text-dark outline-hidden transition border-gray-200 placeholder:text-black/30 focus:border-primary text-black focus-visible:shadow-none ${
-              errors.password ? 'border-red-500' : ''
-            }`}
-          />
+          <div className='relative'>
+            <input
+              type={showPassword ? 'text' : 'password'}
+              placeholder='Password'
+              name='password'
+              value={formData.password}
+              onChange={handleChange}
+              required
+              className={`w-full rounded-lg border border-solid bg-white px-4 py-3 pr-12 text-base text-gray-900 outline-none transition-all duration-200 border-gray-300 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+                errors.password ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+              }`}
+            />
+            <button
+              type='button'
+              onClick={() => setShowPassword(!showPassword)}
+              className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors focus:outline-none'
+              aria-label={showPassword ? 'Hide password' : 'Show password'}>
+              <Icon icon={showPassword ? 'mdi:eye-off' : 'mdi:eye'} className='w-5 h-5' />
+            </button>
+          </div>
           {errors.password && (
             <p className='mt-1 text-sm text-red-500'>{errors.password}</p>
           )}
         </div>
         <div className='mb-[22px]'>
-          <input
-            type='password'
-            placeholder='Confirm Password'
-            name='password_confirm'
-            value={formData.password_confirm}
-            onChange={handleChange}
-            required
-            className={`w-full rounded-md border border-solid bg-transparent px-5 py-3 text-base text-dark outline-hidden transition border-gray-200 placeholder:text-black/30 focus:border-primary text-black focus-visible:shadow-none ${
-              errors.password_confirm ? 'border-red-500' : ''
-            }`}
-          />
+          <div className='relative'>
+            <input
+              type={showConfirmPassword ? 'text' : 'password'}
+              placeholder='Confirm Password'
+              name='password_confirm'
+              value={formData.password_confirm}
+              onChange={handleChange}
+              required
+              className={`w-full rounded-lg border border-solid bg-white px-4 py-3 pr-12 text-base text-gray-900 outline-none transition-all duration-200 border-gray-300 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+                errors.password_confirm ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+              }`}
+            />
+            <button
+              type='button'
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors focus:outline-none'
+              aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}>
+              <Icon icon={showConfirmPassword ? 'mdi:eye-off' : 'mdi:eye'} className='w-5 h-5' />
+            </button>
+          </div>
           {errors.password_confirm && (
             <p className='mt-1 text-sm text-red-500'>{errors.password_confirm}</p>
           )}
@@ -201,30 +221,31 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
           <button
             type='submit'
             disabled={loading}
-            className='flex w-full items-center text-18 font-medium justify-center text-white rounded-md bg-primary px-5 py-3 transition duration-300 ease-in-out hover:bg-transparent hover:text-primary border-primary border hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'>
+            className='flex w-full items-center justify-center rounded-lg border border-primary bg-primary px-5 py-3 text-base font-medium text-white transition duration-300 ease-in-out hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'>
             Sign Up {loading && <Loader />}
           </button>
         </div>
       </form>
 
-      <p className='text-body-secondary mb-4 text-black text-base'>
-        By creating an account you are agree with our{' '}
-        <Link href='/#' className='text-primary hover:underline'>
-          Privacy
-        </Link>{' '}
-        and{' '}
-        <Link href='/#' className='text-primary hover:underline'>
-          Policy
-        </Link>
-      </p>
-
-      <p className='text-body-secondary text-black text-base'>
-        Already have an account?{' '}
-        <Link href='/signin' className='text-primary hover:underline'>
-          Sign In
-        </Link>
-      </p>
-    </>
+      <div className='mt-6 space-y-4 text-center'>
+        <p className='text-sm text-gray-600'>
+          By creating an account you agree with our{' '}
+          <Link href='/#' className='font-medium text-primary hover:text-primary/80 transition-colors'>
+            Privacy
+          </Link>{' '}
+          and{' '}
+          <Link href='/#' className='font-medium text-primary hover:text-primary/80 transition-colors'>
+            Policy
+          </Link>
+        </p>
+        <p className='text-sm text-gray-600'>
+          Already have an account?{' '}
+          <Link href='/signin' className='font-medium text-primary hover:text-primary/80 transition-colors'>
+            Sign In
+          </Link>
+        </p>
+      </div>
+    </div>
   )
 }
 

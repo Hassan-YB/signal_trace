@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
-import { apiRequest, clearTokens, isAuthenticated } from '@/utils/api'
+import { auth } from '@/lib/api'
+import { clearTokens, isAuthenticated, getRefreshToken } from '@/utils/api'
 import Loader from '@/app/components/Common/Loader'
 import { Icon } from '@iconify/react/dist/iconify.js'
 
@@ -32,6 +33,11 @@ const ProfilePage = () => {
     new_password: '',
     new_password_confirm: '',
   })
+  const [showPasswords, setShowPasswords] = useState({
+    old_password: false,
+    new_password: false,
+    new_password_confirm: false,
+  })
   const [errors, setErrors] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -47,7 +53,7 @@ const ProfilePage = () => {
 
   const fetchProfile = async () => {
     try {
-      const response = await apiRequest<{ user: User }>('/api/auth/profile/')
+      const response = await auth.getProfile()
       if (response.success && response.data?.user) {
         const userData = response.data.user
         setUser(userData)
@@ -57,18 +63,19 @@ const ProfilePage = () => {
           email: userData.email || '',
         })
       } else {
-        toast.error(response.message || 'Failed to fetch profile')
-        if (response.errors) {
-          // Token might be invalid, redirect to login
-          clearTokens()
-          router.push('/signin')
+        // 401 errors are handled automatically by API client (user will be logged out and redirected)
+        // Only show error for non-401 errors
+        if (!response.message?.includes('session has expired')) {
+          toast.error(response.message || 'Failed to fetch profile')
         }
       }
     } catch (error: any) {
-      toast.error('Failed to fetch profile')
-      console.error(error)
-      clearTokens()
-      router.push('/signin')
+      // 401 errors are handled automatically by API client
+      // Only show error for network or other errors
+      if (!error.message?.includes('session has expired')) {
+        toast.error('Failed to fetch profile')
+        console.error(error)
+      }
     }
   }
 
@@ -78,10 +85,7 @@ const ProfilePage = () => {
     setErrors({})
 
     try {
-      const response = await apiRequest<{ user: User }>('/api/auth/profile/', {
-        method: 'PUT',
-        body: JSON.stringify(profileData),
-      })
+      const response = await auth.updateProfile(profileData)
 
       if (response.success && response.data?.user) {
         const userData = response.data.user
@@ -116,10 +120,7 @@ const ProfilePage = () => {
     setErrors({})
 
     try {
-      const response = await apiRequest('/api/auth/password/change/', {
-        method: 'POST',
-        body: JSON.stringify(passwordData),
-      })
+      const response = await auth.changePassword(passwordData)
 
       if (response.success) {
         toast.success(response.message || 'Password changed successfully')
@@ -159,12 +160,9 @@ const ProfilePage = () => {
   const handleLogout = async () => {
     setLoading(true)
     try {
-      const refreshToken = localStorage.getItem('refresh_token')
+      const refreshToken = getRefreshToken()
       if (refreshToken) {
-        await apiRequest('/api/auth/logout/', {
-          method: 'POST',
-          body: JSON.stringify({ refresh_token: refreshToken }),
-        })
+        await auth.logout({ refresh_token: refreshToken })
       }
     } catch (error) {
       console.error('Logout error:', error)
@@ -207,7 +205,7 @@ const ProfilePage = () => {
         <div className='flex flex-col md:flex-row gap-6'>
           {/* Sidebar */}
           <div className='w-full md:w-64 flex-shrink-0'>
-            <div className='bg-white rounded-lg shadow-md p-4'>
+            <div className='rounded-xl border border-gray-200 bg-slate-50 shadow-sm p-4'>
               <div className='space-y-2'>
                 <button
                   onClick={() => setActiveTab('profile')}
@@ -227,7 +225,7 @@ const ProfilePage = () => {
                       : 'text-black hover:bg-gray-100'
                   }`}>
                   <Icon icon='fa:lock' className='text-xl' />
-                  Change Password
+                  Password
                 </button>
                 <button
                   onClick={() => setActiveTab('logout')}
@@ -237,7 +235,7 @@ const ProfilePage = () => {
                       : 'text-black hover:bg-gray-100'
                   }`}>
                   <Icon icon='mdi:logout' className='text-xl' />
-                  Logout
+                  Sign Out
                 </button>
               </div>
             </div>
@@ -245,12 +243,13 @@ const ProfilePage = () => {
 
           {/* Main Content */}
           <div className='flex-1'>
-            <div className='bg-white rounded-lg shadow-md p-6 min-h-[500px]'>
+            <div className='rounded-xl border border-gray-200 bg-slate-50 shadow-sm p-8 min-h-[500px]'>
               {activeTab === 'profile' && (
                 <div>
-                  <h2 className='text-3xl font-bold mb-6 text-black'>Update Profile</h2>
+                  <h2 className='text-2xl font-bold mb-2 text-gray-900'>Profile</h2>
+                  <p className='mb-6 text-sm text-gray-600'>Update your personal information</p>
                   <form onSubmit={handleProfileUpdate}>
-                    <div className='space-y-4'>
+                    <div className='space-y-4 max-w-md'>
                       <div>
                         <label className='block text-sm font-medium text-gray-700 mb-2'>
                           First Name
@@ -260,8 +259,8 @@ const ProfilePage = () => {
                           name='first_name'
                           value={profileData.first_name}
                           onChange={handleProfileChange}
-                          className={`w-full rounded-md border border-solid bg-transparent px-5 py-3 text-base text-dark outline-hidden transition border-gray-200 placeholder:text-black/30 focus:border-primary focus-visible:shadow-none text-black ${
-                            errors.first_name ? 'border-red-500' : ''
+                          className={`w-full rounded-lg border border-solid bg-white px-4 py-3 text-base text-gray-900 outline-none transition-all duration-200 border-gray-300 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+                            errors.first_name ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                           }`}
                         />
                         {errors.first_name && (
@@ -278,8 +277,8 @@ const ProfilePage = () => {
                           name='last_name'
                           value={profileData.last_name}
                           onChange={handleProfileChange}
-                          className={`w-full rounded-md border border-solid bg-transparent px-5 py-3 text-base text-dark outline-hidden transition border-gray-200 placeholder:text-black/30 focus:border-primary focus-visible:shadow-none text-black ${
-                            errors.last_name ? 'border-red-500' : ''
+                          className={`w-full rounded-lg border border-solid bg-white px-4 py-3 text-base text-gray-900 outline-none transition-all duration-200 border-gray-300 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+                            errors.last_name ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                           }`}
                         />
                         {errors.last_name && (
@@ -296,8 +295,8 @@ const ProfilePage = () => {
                           name='email'
                           value={profileData.email}
                           onChange={handleProfileChange}
-                          className={`w-full rounded-md border border-solid bg-transparent px-5 py-3 text-base text-dark outline-hidden transition border-gray-200 placeholder:text-black/30 focus:border-primary focus-visible:shadow-none text-black ${
-                            errors.email ? 'border-red-500' : ''
+                          className={`w-full rounded-lg border border-solid bg-white px-4 py-3 text-base text-gray-900 outline-none transition-all duration-200 border-gray-300 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+                            errors.email ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                           }`}
                         />
                         {errors.email && (
@@ -309,8 +308,8 @@ const ProfilePage = () => {
                         <button
                           type='submit'
                           disabled={loading}
-                          className='bg-primary w-auto px-8 py-3 rounded-lg text-18 font-medium transition duration-300 ease-in-out border text-white border-primary hover:text-primary hover:bg-transparent hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'>
-                          {loading ? <Loader /> : 'Update Profile'}
+                          className='flex items-center justify-center rounded-lg border border-primary bg-primary px-6 py-3 text-base font-medium text-white transition duration-300 ease-in-out hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'>
+                          {loading ? <Loader /> : 'Save'}
                         </button>
                       </div>
                     </div>
@@ -320,22 +319,32 @@ const ProfilePage = () => {
 
               {activeTab === 'password' && (
                 <div>
-                  <h2 className='text-3xl font-bold mb-6 text-black'>Change Password</h2>
+                  <h2 className='text-2xl font-bold mb-2 text-gray-900'>Password</h2>
+                  <p className='mb-6 text-sm text-gray-600'>Update your password to keep your account secure</p>
                   <form onSubmit={handlePasswordChange}>
-                    <div className='space-y-4'>
+                    <div className='space-y-4 max-w-md'>
                       <div>
                         <label className='block text-sm font-medium text-gray-700 mb-2'>
-                          Old Password
+                          Current Password
                         </label>
-                        <input
-                          type='password'
-                          name='old_password'
-                          value={passwordData.old_password}
-                          onChange={handlePasswordChangeInput}
-                          className={`w-full rounded-md border border-solid bg-transparent px-5 py-3 text-base text-dark outline-hidden transition border-gray-200 placeholder:text-black/30 focus:border-primary focus-visible:shadow-none text-black ${
-                            errors.old_password ? 'border-red-500' : ''
-                          }`}
-                        />
+                        <div className='relative'>
+                          <input
+                            type={showPasswords.old_password ? 'text' : 'password'}
+                            name='old_password'
+                            value={passwordData.old_password}
+                            onChange={handlePasswordChangeInput}
+                            className={`w-full rounded-lg border border-solid bg-white px-4 py-3 pr-12 text-base text-gray-900 outline-none transition-all duration-200 border-gray-300 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+                              errors.old_password ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                            }`}
+                          />
+                          <button
+                            type='button'
+                            onClick={() => setShowPasswords({ ...showPasswords, old_password: !showPasswords.old_password })}
+                            className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors focus:outline-none'
+                            aria-label={showPasswords.old_password ? 'Hide password' : 'Show password'}>
+                            <Icon icon={showPasswords.old_password ? 'mdi:eye-off' : 'mdi:eye'} className='w-5 h-5' />
+                          </button>
+                        </div>
                         {errors.old_password && (
                           <p className='mt-1 text-sm text-red-500'>{errors.old_password}</p>
                         )}
@@ -345,15 +354,24 @@ const ProfilePage = () => {
                         <label className='block text-sm font-medium text-gray-700 mb-2'>
                           New Password
                         </label>
-                        <input
-                          type='password'
-                          name='new_password'
-                          value={passwordData.new_password}
-                          onChange={handlePasswordChangeInput}
-                          className={`w-full rounded-md border border-solid bg-transparent px-5 py-3 text-base text-dark outline-hidden transition border-gray-200 placeholder:text-black/30 focus:border-primary focus-visible:shadow-none text-black ${
-                            errors.new_password ? 'border-red-500' : ''
-                          }`}
-                        />
+                        <div className='relative'>
+                          <input
+                            type={showPasswords.new_password ? 'text' : 'password'}
+                            name='new_password'
+                            value={passwordData.new_password}
+                            onChange={handlePasswordChangeInput}
+                            className={`w-full rounded-lg border border-solid bg-white px-4 py-3 pr-12 text-base text-gray-900 outline-none transition-all duration-200 border-gray-300 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+                              errors.new_password ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                            }`}
+                          />
+                          <button
+                            type='button'
+                            onClick={() => setShowPasswords({ ...showPasswords, new_password: !showPasswords.new_password })}
+                            className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors focus:outline-none'
+                            aria-label={showPasswords.new_password ? 'Hide password' : 'Show password'}>
+                            <Icon icon={showPasswords.new_password ? 'mdi:eye-off' : 'mdi:eye'} className='w-5 h-5' />
+                          </button>
+                        </div>
                         {errors.new_password && (
                           <p className='mt-1 text-sm text-red-500'>{errors.new_password}</p>
                         )}
@@ -361,17 +379,26 @@ const ProfilePage = () => {
 
                       <div>
                         <label className='block text-sm font-medium text-gray-700 mb-2'>
-                          Confirm New Password
+                          Confirm Password
                         </label>
-                        <input
-                          type='password'
-                          name='new_password_confirm'
-                          value={passwordData.new_password_confirm}
-                          onChange={handlePasswordChangeInput}
-                          className={`w-full rounded-md border border-solid bg-transparent px-5 py-3 text-base text-dark outline-hidden transition border-gray-200 placeholder:text-black/30 focus:border-primary focus-visible:shadow-none text-black ${
-                            errors.new_password_confirm ? 'border-red-500' : ''
-                          }`}
-                        />
+                        <div className='relative'>
+                          <input
+                            type={showPasswords.new_password_confirm ? 'text' : 'password'}
+                            name='new_password_confirm'
+                            value={passwordData.new_password_confirm}
+                            onChange={handlePasswordChangeInput}
+                            className={`w-full rounded-lg border border-solid bg-white px-4 py-3 pr-12 text-base text-gray-900 outline-none transition-all duration-200 border-gray-300 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+                              errors.new_password_confirm ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                            }`}
+                          />
+                          <button
+                            type='button'
+                            onClick={() => setShowPasswords({ ...showPasswords, new_password_confirm: !showPasswords.new_password_confirm })}
+                            className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors focus:outline-none'
+                            aria-label={showPasswords.new_password_confirm ? 'Hide password' : 'Show password'}>
+                            <Icon icon={showPasswords.new_password_confirm ? 'mdi:eye-off' : 'mdi:eye'} className='w-5 h-5' />
+                          </button>
+                        </div>
                         {errors.new_password_confirm && (
                           <p className='mt-1 text-sm text-red-500'>{errors.new_password_confirm}</p>
                         )}
@@ -381,8 +408,8 @@ const ProfilePage = () => {
                         <button
                           type='submit'
                           disabled={loading}
-                          className='bg-primary w-auto px-8 py-3 rounded-lg text-18 font-medium transition duration-300 ease-in-out border text-white border-primary hover:text-primary hover:bg-transparent hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed'>
-                          {loading ? <Loader /> : 'Change Password'}
+                          className='flex items-center justify-center rounded-lg border border-primary bg-primary px-6 py-3 text-base font-medium text-white transition duration-300 ease-in-out hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'>
+                          {loading ? <Loader /> : 'Update'}
                         </button>
                       </div>
                     </div>
@@ -392,22 +419,23 @@ const ProfilePage = () => {
 
               {activeTab === 'logout' && (
                 <div>
-                  <h2 className='text-3xl font-bold mb-6 text-black'>Logout</h2>
+                  <h2 className='text-2xl font-bold mb-2 text-gray-900'>Sign Out</h2>
+                  <p className='mb-6 text-sm text-gray-600'>Sign out of your account</p>
                   <div className='space-y-4'>
                     <p className='text-gray-700'>
-                      Are you sure you want to logout? You will need to sign in again to access your
+                      Are you sure you want to sign out? You will need to sign in again to access your
                       account.
                     </p>
                     <button
                       onClick={handleLogout}
                       disabled={loading}
-                      className='bg-red-500 w-auto px-8 py-3 rounded-lg text-18 font-medium transition duration-300 ease-in-out border text-white border-red-500 hover:bg-red-600 hover:cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2'>
+                      className='flex items-center justify-center gap-2 rounded-lg border border-red-500 bg-red-500 px-6 py-3 text-base font-medium text-white transition duration-300 ease-in-out hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed'>
                       {loading ? (
                         <Loader />
                       ) : (
                         <>
                           <Icon icon='mdi:logout' className='text-lg' />
-                          Logout
+                          Sign Out
                         </>
                       )}
                     </button>

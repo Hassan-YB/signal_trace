@@ -1,11 +1,10 @@
 'use client'
 import React, { useState, useEffect } from 'react'
-import axios from 'axios'
+import { auth } from '@/lib/api'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import Loader from '@/app/components/Common/Loader'
 import Link from 'next/link'
-import Image from 'next/image'
 
 const ResetPassword = ({ token }: { token: string }) => {
   const [data, setData] = useState({
@@ -23,17 +22,18 @@ const ResetPassword = ({ token }: { token: string }) => {
   useEffect(() => {
     const verifyToken = async () => {
       try {
-        const res = await axios.post(`/api/forgot-password/verify-token`, {
-          token,
-        })
+        const response = await auth.verifyResetToken({ token })
 
-        if (res.status === 200) {
+        if (response.success && response.data) {
           setUser({
-            email: res.data.email,
+            email: response.data.email,
           })
+        } else {
+          toast.error(response.message || 'Invalid or expired token')
+          router.push('/forgot-password')
         }
       } catch (error: any) {
-        toast.error(error?.response?.data)
+        toast.error(error?.message || 'Failed to verify token')
         router.push('/forgot-password')
       }
     }
@@ -55,83 +55,78 @@ const ResetPassword = ({ token }: { token: string }) => {
 
     if (data.newPassword === '') {
       toast.error('Please enter your password.')
+      setLoader(false)
+      return
+    }
+
+    if (!user.email) {
+      toast.error('User email not found. Please try again.')
+      setLoader(false)
       return
     }
 
     try {
-      const res = await axios.post(`/api/forgot-password/update`, {
-        email: user?.email,
+      const response = await auth.resetPassword({
+        email: user.email,
         password: data.newPassword,
       })
 
-      if (res.status === 200) {
-        toast.success(res.data)
+      if (response.success) {
+        toast.success(response.message || 'Password reset successfully')
         setData({ newPassword: '', ReNewPassword: '' })
         router.push('/signin')
+      } else {
+        toast.error(response.message || 'Failed to reset password')
       }
 
       setLoader(false)
     } catch (error: any) {
-      toast.error(error.response.data)
+      toast.error(error?.message || 'An error occurred. Please try again.')
       setLoader(false)
     }
   }
 
   return (
-    <section className='bg-[#F4F7FF] py-14 dark:bg-dark lg:py-20'>
+    <section className='bg-[#F4F7FF] py-14 lg:py-20'>
       <div className='container'>
         <div className='-mx-4 flex flex-wrap'>
           <div className='w-full px-4'>
             <div
-              className='wow fadeInUp relative mx-auto max-w-[525px] overflow-hidden rounded-lg bg-white px-8 py-14 text-center dark:bg-dark-2 sm:px-12 md:px-[60px]'
+              className='wow fadeInUp relative mx-auto max-w-[525px] overflow-hidden rounded-xl border border-gray-200 bg-slate-50 px-8 py-14 text-center shadow-sm sm:px-12 md:px-[60px]'
               data-wow-delay='.15s'>
-              <div className='mb-10 text-center'>
-                <Link href='/' className='mx-auto inline-block max-w-[160px]'>
-                  <Image
-                    src='/images/logo/logo.svg'
-                    alt='logo'
-                    width={140}
-                    height={30}
-                    className='dark:hidden'
-                  />
-                  <Image
-                    src='/images/logo/logo-white.svg'
-                    alt='logo'
-                    width={140}
-                    height={30}
-                    className='hidden dark:block'
-                  />
-                </Link>
+              <div className='mb-8'>
+                <h2 className='text-2xl font-bold text-gray-900'>Reset Password</h2>
+                <p className='mt-2 text-sm text-gray-600'>Enter your new password below.</p>
               </div>
 
               <form onSubmit={handleSubmit}>
                 <div className='mb-[22px]'>
                   <input
-                    type='text'
+                    type='password'
                     placeholder='New password'
                     name='newPassword'
                     value={data?.newPassword}
                     onChange={handleChange}
                     required
-                    className='w-full rounded-md border border-stroke bg-transparent px-5 py-3 text-base text-dark outline-hidden transition placeholder:text-dark-6 focus:border-primary focus-visible:shadow-none dark:border-dark-3 dark:text-white dark:focus:border-primary'
+                    className='w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none transition-all duration-200 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20'
                   />
                 </div>
 
                 <div className='mb-[22px]'>
                   <input
-                    type='text'
-                    placeholder='New password'
-                    name='newPassword'
-                    value={data?.newPassword}
+                    type='password'
+                    placeholder='Confirm new password'
+                    name='ReNewPassword'
+                    value={data?.ReNewPassword}
                     onChange={handleChange}
                     required
-                    className='w-full rounded-md border border-stroke bg-transparent px-5 py-3 text-base text-dark outline-hidden transition placeholder:text-dark-6 focus:border-primary focus-visible:shadow-none dark:border-dark-3 dark:text-white dark:focus:border-primary'
+                    className='w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none transition-all duration-200 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20'
                   />
                 </div>
                 <div className=''>
                   <button
                     type='submit'
-                    className='flex w-full cursor-pointer items-center justify-center rounded-md border border-primary bg-primary px-5 py-3 text-base text-white transition duration-300 ease-in-out hover:bg-blue-dark'>
+                    className='flex w-full cursor-pointer items-center justify-center rounded-lg border border-primary bg-primary px-5 py-3 text-base font-medium text-white transition duration-300 ease-in-out hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'>
                     Save Password {loader && <Loader />}
                   </button>
                 </div>

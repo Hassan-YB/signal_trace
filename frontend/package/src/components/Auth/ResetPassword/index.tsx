@@ -1,6 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
-import axios from "axios";
+import { auth } from "@/lib/api";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import Loader from "@/components/Common/Loader";
@@ -23,17 +23,18 @@ const ResetPassword = ({ token }: { token: string }) => {
   useEffect(() => {
     const verifyToken = async () => {
       try {
-        const res = await axios.post(`/api/forgot-password/verify-token`, {
-          token,
-        });
+        const response = await auth.verifyResetToken({ token });
 
-        if (res.status === 200) {
+        if (response.success && response.data) {
           setUser({
-            email: res.data.email,
+            email: response.data.email,
           });
+        } else {
+          toast.error(response.message || "Invalid or expired token");
+          router.push("/forgot-password");
         }
       } catch (error: any) {
-        toast.error(error?.response?.data);
+        toast.error(error?.message || "Failed to verify token");
         router.push("/forgot-password");
       }
     };
@@ -55,24 +56,33 @@ const ResetPassword = ({ token }: { token: string }) => {
 
     if (data.newPassword === "") {
       toast.error("Please enter your password.");
+      setLoader(false);
+      return;
+    }
+
+    if (!user.email) {
+      toast.error("User email not found. Please try again.");
+      setLoader(false);
       return;
     }
 
     try {
-      const res = await axios.post(`/api/forgot-password/update`, {
-        email: user?.email,
+      const response = await auth.resetPassword({
+        email: user.email,
         password: data.newPassword,
       });
 
-      if (res.status === 200) {
-        toast.success(res.data);
+      if (response.success) {
+        toast.success(response.message || "Password reset successfully");
         setData({ newPassword: "", ReNewPassword: "" });
         router.push("/signin");
+      } else {
+        toast.error(response.message || "Failed to reset password");
       }
 
       setLoader(false);
     } catch (error: any) {
-      toast.error(error.response.data);
+      toast.error(error?.message || "An error occurred. Please try again.");
       setLoader(false);
     }
   };

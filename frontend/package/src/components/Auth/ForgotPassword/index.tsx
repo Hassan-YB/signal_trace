@@ -2,7 +2,7 @@
 import React from "react";
 import { useState } from "react";
 import toast from "react-hot-toast";
-import axios from "axios";
+import { auth } from "@/lib/api";
 import Loader from "@/components/Common/Loader";
 import Link from "next/link";
 import Image from "next/image";
@@ -16,31 +16,26 @@ const ForgotPassword = () => {
 
     if (!email) {
       toast.error("Please enter your email address.");
-
       return;
     }
 
     setLoader(true);
 
     try {
-      const res = await axios.post("/api/forgot-password/reset", {
+      const response = await auth.forgotPassword({
         email: email.toLowerCase(),
       });
 
-      if (res.status === 404) {
-        toast.error("User not found.");
-        return;
-      }
-
-      if (res.status === 200) {
-        toast.success(res.data);
+      if (response.success) {
+        toast.success(response.message || "Password reset email sent successfully");
         setEmail("");
+      } else {
+        toast.error(response.message || "Failed to send password reset email");
       }
 
-      setEmail("");
       setLoader(false);
     } catch (error: any) {
-      toast.error(error?.response.data);
+      toast.error(error?.message || "An error occurred. Please try again.");
       setLoader(false);
     }
   };
