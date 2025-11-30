@@ -107,7 +107,7 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
   }
 
   return (
-    <div className='rounded-xl border border-gray-200 bg-slate-50 p-8 shadow-sm'>
+    <div className='rounded-xl border border-gray-200 bg-white p-8 shadow-sm'>
       <div className='mb-8'>
         <h2 className='text-2xl font-bold text-gray-900'>Sign Up</h2>
         <p className='mt-2 text-sm text-gray-600'>Create a new account to get started.</p>
@@ -217,6 +217,18 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
             <p className='text-sm text-red-500'>{errors.non_field_errors}</p>
           </div>
         )}
+        <div className='mb-4 text-center'>
+          <p className='text-sm text-gray-600'>
+            By creating an account you agree with our{' '}
+            <Link href='/#' className='font-medium text-primary hover:text-primary/80 transition-colors'>
+              Privacy
+            </Link>{' '}
+            and{' '}
+            <Link href='/#' className='font-medium text-primary hover:text-primary/80 transition-colors'>
+              Policy
+            </Link>
+          </p>
+        </div>
         <div className='mb-9'>
           <button
             type='submit'
@@ -227,17 +239,7 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
         </div>
       </form>
 
-      <div className='mt-6 space-y-4 text-center'>
-        <p className='text-sm text-gray-600'>
-          By creating an account you agree with our{' '}
-          <Link href='/#' className='font-medium text-primary hover:text-primary/80 transition-colors'>
-            Privacy
-          </Link>{' '}
-          and{' '}
-          <Link href='/#' className='font-medium text-primary hover:text-primary/80 transition-colors'>
-            Policy
-          </Link>
-        </p>
+      <div className='mt-6 text-center'>
         <p className='text-sm text-gray-600'>
           Already have an account?{' '}
           <Link href='/signin' className='font-medium text-primary hover:text-primary/80 transition-colors'>

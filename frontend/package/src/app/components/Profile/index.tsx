@@ -200,54 +200,58 @@ const ProfilePage = () => {
   }
 
   return (
-    <div className='container mx-auto px-4 py-10'>
-      <div className='max-w-6xl mx-auto'>
+    <div className='min-h-screen bg-slate-100 py-5'>
+      <div className='container mx-auto px-4'>
         <div className='flex flex-col md:flex-row gap-6'>
-          {/* Sidebar */}
-          <div className='w-full md:w-64 flex-shrink-0'>
-            <div className='rounded-xl border border-gray-200 bg-slate-50 shadow-sm p-4'>
-              <div className='space-y-2'>
-                <button
-                  onClick={() => setActiveTab('profile')}
-                  className={`w-full flex items-center gap-3 text-left px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'profile'
-                      ? 'bg-primary text-white'
-                      : 'text-black hover:bg-gray-100'
-                  }`}>
-                  <Icon icon='fa:user-circle' className='text-xl' />
-                  Profile
-                </button>
-                <button
-                  onClick={() => setActiveTab('password')}
-                  className={`w-full flex items-center gap-3 text-left px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'password'
-                      ? 'bg-primary text-white'
-                      : 'text-black hover:bg-gray-100'
-                  }`}>
-                  <Icon icon='fa:lock' className='text-xl' />
-                  Password
-                </button>
-                <button
-                  onClick={() => setActiveTab('logout')}
-                  className={`w-full flex items-center gap-3 text-left px-4 py-3 rounded-lg transition-colors ${
-                    activeTab === 'logout'
-                      ? 'bg-red-500 text-white'
-                      : 'text-black hover:bg-gray-100'
-                  }`}>
-                  <Icon icon='mdi:logout' className='text-xl' />
-                  Sign Out
-                </button>
+            {/* Sidebar */}
+            <div className='w-full md:w-64 flex-shrink-0'>
+              <div className='rounded-xl border border-gray-200 bg-white shadow-sm p-4 min-h-[600px]'>
+                <h2 className='text-2xl font-bold mb-6 text-gray-900 text-center'>Settings</h2>
+                <div className='space-y-2'>
+                  <button
+                    onClick={() => setActiveTab('profile')}
+                    className={`w-full flex items-center gap-3 text-left px-4 py-3 rounded-lg transition-colors ${
+                      activeTab === 'profile'
+                        ? 'bg-primary text-white'
+                        : 'text-black hover:bg-gray-100'
+                    }`}>
+                    <Icon icon='fa:user-circle' className='text-xl' />
+                    Profile
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('password')}
+                    className={`w-full flex items-center gap-3 text-left px-4 py-3 rounded-lg transition-colors ${
+                      activeTab === 'password'
+                        ? 'bg-primary text-white'
+                        : 'text-black hover:bg-gray-100'
+                    }`}>
+                    <Icon icon='fa:lock' className='text-xl' />
+                    Password
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('logout')}
+                    className={`w-full flex items-center gap-3 text-left px-4 py-3 rounded-lg transition-colors ${
+                      activeTab === 'logout'
+                        ? 'bg-red-500 text-white'
+                        : 'text-black hover:bg-gray-100'
+                    }`}>
+                    <Icon icon='mdi:logout' className='text-xl' />
+                    Sign Out
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Main Content */}
-          <div className='flex-1'>
-            <div className='rounded-xl border border-gray-200 bg-slate-50 shadow-sm p-8 min-h-[500px]'>
-              {activeTab === 'profile' && (
-                <div>
-                  <h2 className='text-2xl font-bold mb-2 text-gray-900'>Profile</h2>
-                  <p className='mb-6 text-sm text-gray-600'>Update your personal information</p>
+            {/* Main Content */}
+            <div className='flex-1'>
+              <div className='rounded-xl border border-gray-200 bg-white shadow-sm p-8 min-h-[600px]'>
+                {activeTab === 'profile' && (
+                  <div>
+                    <h2 className='text-2xl font-bold mb-2 text-gray-900 flex items-start gap-3 leading-none'>
+                      <Icon icon='fa:user-circle' className='text-xl' />
+                      Profile
+                    </h2>
+                    <p className='mb-6 text-sm text-gray-600'>Update your personal information</p>
                   <form onSubmit={handleProfileUpdate}>
                     <div className='space-y-4 max-w-md'>
                       <div>
@@ -319,7 +323,10 @@ const ProfilePage = () => {
 
               {activeTab === 'password' && (
                 <div>
-                  <h2 className='text-2xl font-bold mb-2 text-gray-900'>Password</h2>
+                  <h2 className='text-2xl font-bold mb-2 text-gray-900 flex items-center gap-3 leading-none'>
+                    <Icon icon='fa:lock' className='text-xl' />
+                    Password
+                  </h2>
                   <p className='mb-6 text-sm text-gray-600'>Update your password to keep your account secure</p>
                   <form onSubmit={handlePasswordChange}>
                     <div className='space-y-4 max-w-md'>
@@ -419,7 +426,10 @@ const ProfilePage = () => {
 
               {activeTab === 'logout' && (
                 <div>
-                  <h2 className='text-2xl font-bold mb-2 text-gray-900'>Sign Out</h2>
+                  <h2 className='text-2xl font-bold mb-2 text-gray-900 flex items-center gap-3 leading-none'>
+                    <Icon icon='mdi:logout' className='text-xl' />
+                    Sign Out
+                  </h2>
                   <p className='mb-6 text-sm text-gray-600'>Sign out of your account</p>
                   <div className='space-y-4'>
                     <p className='text-gray-700'>

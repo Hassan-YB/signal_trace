@@ -89,7 +89,7 @@ const Signin = ({ onSuccess }: SigninProps) => {
   }
 
   return (
-    <div className='rounded-xl border border-gray-200 bg-slate-50 p-8 shadow-sm'>
+    <div className='rounded-xl border border-gray-200 bg-white p-8 shadow-sm'>
       <div className='mb-8'>
         <h2 className='text-2xl font-bold text-gray-900'>Sign In</h2>
         <p className='mt-2 text-sm text-gray-600'>Welcome back! Please sign in to your account.</p>

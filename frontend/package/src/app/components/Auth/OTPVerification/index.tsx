@@ -165,7 +165,7 @@ const OTPVerification = ({
   }
 
   return (
-    <div className='rounded-xl border border-gray-200 bg-slate-50 p-8 shadow-sm'>
+    <div className='rounded-xl border border-gray-200 bg-white p-8 shadow-sm'>
       <div className='mb-8'>
         <h2 className='text-2xl font-bold text-gray-900'>
           {otpType === 'signup' ? 'Verify Your Email' : 'Verify OTP'}
