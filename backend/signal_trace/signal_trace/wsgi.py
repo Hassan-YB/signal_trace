@@ -1,5 +1,5 @@
 """
-WSGI config for warm_signal project.
+WSGI config for signal_trace project.
 
 It exposes the WSGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'warm_signal.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'signal_trace.settings')
 
 application = get_wsgi_application()

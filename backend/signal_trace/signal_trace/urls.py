@@ -1,5 +1,5 @@
 """
-URL configuration for warm_signal project.
+URL configuration for signal_trace project.
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/5.2/topics/http/urls/
@@ -19,9 +19,9 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-admin.site.site_header = f'Warm Signal Administration'
-admin.site.index_title = 'Warm Signal'                
-admin.site.site_title = 'Warm Signal'
+admin.site.site_header = f'Signal Trace Administration'
+admin.site.index_title = 'Signal Trace'                
+admin.site.site_title = 'Signal Trace'
 
 urlpatterns = [
     path('admin/', admin.site.urls),

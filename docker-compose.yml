@@ -1,6 +1,6 @@
 services:
   db:
-    container_name: warm_signal_db
+    container_name: signal_trace_db
     image: postgres:18.1-alpine
     volumes:
       - postgres_data:/var/lib/postgresql/data/
@@ -9,21 +9,21 @@ services:
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U warm_signal"]
+      test: ["CMD-SHELL", "pg_isready -U signal_trace"]
       interval: 10s
       timeout: 5s
       retries: 5
 
   web:
-    container_name: warm_signal_backend
+    container_name: signal_trace_backend
     build:
-      context: ./backend/warm_signal
+      context: ./backend/signal_trace
       dockerfile: Dockerfile
     command: sh -c "python manage.py runserver 0.0.0.0:8000"
     env_file:
       - .env
     volumes:
-      - ./backend/warm_signal:/app
+      - ./backend/signal_trace:/app
       - static_volume:/app/staticfiles
     ports:
       - "8000:8000"
@@ -32,7 +32,7 @@ services:
         condition: service_healthy
 
   frontend:
-    container_name: warm_signal_frontend
+    container_name: signal_trace_frontend
     build:
       context: ./frontend/package
       dockerfile: Dockerfile

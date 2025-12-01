@@ -1,5 +1,5 @@
 """
-ASGI config for warm_signal project.
+ASGI config for signal_trace project.
 
 It exposes the ASGI callable as a module-level variable named ``application``.
 
@@ -11,6 +11,6 @@ import os
 
 from django.core.asgi import get_asgi_application
 
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'warm_signal.settings')
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'signal_trace.settings')
 
 application = get_asgi_application()

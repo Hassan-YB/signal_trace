@@ -1,10 +1,10 @@
-# Makefile for Warm Signal Project
+# Makefile for Signal Trace Project
 # Provides convenient commands for managing the Django + Next.js application
 
 # Container names
-WEB_CONTAINER = warm_signal_backend
-FRONTEND_CONTAINER = warm_signal_frontend
-DB_CONTAINER = warm_signal_db
+WEB_CONTAINER = signal_trace_backend
+FRONTEND_CONTAINER = signal_trace_frontend
+DB_CONTAINER = signal_trace_db
 
 # Docker compose command
 DOCKER_COMPOSE = docker compose -f docker-compose.yml
@@ -19,7 +19,7 @@ MANAGE = $(EXEC_WEB) python manage.py
 
 .PHONY: help
 help: ## Show this help message
-	@echo "Warm Signal Project - Available Commands:"
+	@echo "Signal Trace Project - Available Commands:"
 	@echo ""
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
@@ -100,7 +100,7 @@ frontend-shell: ## Open shell in frontend container
 
 .PHONY: db-shell
 db-shell: ## Open PostgreSQL shell
-	$(EXEC_DB) psql -U warm_signal
+	$(EXEC_DB) psql -U signal_trace
 
 .PHONY: logs
 logs: ## Show logs from all containers
@@ -131,7 +131,7 @@ setup: ## Initial setup: build, run, migrate, collectstatic
 .PHONY: health
 health: ## Check container health status
 	@echo "Checking container status..."
-	@docker ps --filter "name=warm_signal" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+	@docker ps --filter "name=signal_trace" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 
 .PHONY: test
 test: ## Run Django tests
