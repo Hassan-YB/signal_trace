@@ -1,9 +1,11 @@
 'use client'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useMemo } from 'react'
 import { auth } from '@/lib/api'
 import { useRouter, useSearchParams } from 'next/navigation'
 import toast from 'react-hot-toast'
 import Loader from '@/app/components/Common/Loader'
+import PasswordStrengthMeter, { validatePasswordStrength } from '@/app/components/Common/PasswordStrengthMeter'
+import { Icon } from '@iconify/react/dist/iconify.js'
 import Link from 'next/link'
 import Breadcrumb from '@/app/components/Common/Breadcrumb'
 
@@ -17,6 +19,9 @@ const ResetPasswordPage = () => {
   const [loader, setLoader] = useState(false)
   const [email, setEmail] = useState('')
   const [otpCode, setOtpCode] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [passwordMatchError, setPasswordMatchError] = useState<string>('')
 
   useEffect(() => {
     const emailParam = searchParams.get('email')
@@ -31,6 +36,35 @@ const ResetPasswordPage = () => {
     setEmail(emailParam)
     setOtpCode(otpParam)
   }, [searchParams, router])
+
+  // Real-time password matching validation
+  useEffect(() => {
+    if (data.password_confirm && data.password !== data.password_confirm) {
+      setPasswordMatchError('Passwords do not match')
+    } else {
+      setPasswordMatchError('')
+    }
+  }, [data.password, data.password_confirm])
+
+  // Check if form is valid
+  const isFormValid = useMemo(() => {
+    if (!data.password || !data.password_confirm) {
+      return false
+    }
+
+    // Check password strength (must be strong - score >= 4)
+    const passwordStrength = validatePasswordStrength(data.password, email)
+    if (passwordStrength.score < 4 || !passwordStrength.isValid) {
+      return false
+    }
+
+    // Check passwords match
+    if (data.password !== data.password_confirm) {
+      return false
+    }
+
+    return true
+  }, [data.password, data.password_confirm, email])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setData({
@@ -131,32 +165,60 @@ const ResetPasswordPage = () => {
 
                 <form onSubmit={handleSubmit}>
                   <div className='mb-[22px]'>
-                    <input
-                      type='password'
-                      placeholder='New password'
-                      name='password'
-                      value={data?.password}
-                      onChange={handleChange}
-                      required
-                      className='w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none transition-all duration-200 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20'
+                    <div className='relative'>
+                      <input
+                        type={showPassword ? 'text' : 'password'}
+                        placeholder='New password'
+                        name='password'
+                        value={data?.password}
+                        onChange={handleChange}
+                        required
+                        className='w-full rounded-lg border border-gray-300 bg-white px-4 py-3 pr-12 text-base text-gray-900 outline-none transition-all duration-200 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20'
+                      />
+                      <button
+                        type='button'
+                        onClick={() => setShowPassword(!showPassword)}
+                        className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors focus:outline-none'
+                        aria-label={showPassword ? 'Hide password' : 'Show password'}>
+                        <Icon icon={showPassword ? 'mdi:eye-off' : 'mdi:eye'} className='w-5 h-5' />
+                      </button>
+                    </div>
+                    <PasswordStrengthMeter
+                      password={data.password}
+                      email={email}
                     />
                   </div>
 
                   <div className='mb-[22px]'>
-                    <input
-                      type='password'
-                      placeholder='Confirm new password'
-                      name='password_confirm'
-                      value={data?.password_confirm}
-                      onChange={handleChange}
-                      required
-                      className='w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none transition-all duration-200 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20'
-                    />
+                    <div className='relative'>
+                      <input
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        placeholder='Confirm new password'
+                        name='password_confirm'
+                        value={data?.password_confirm}
+                        onChange={handleChange}
+                        required
+                        className={`w-full rounded-lg border border-gray-300 bg-white px-4 py-3 pr-12 text-base text-gray-900 outline-none transition-all duration-200 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
+                          passwordMatchError ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                        }`}
+                      />
+                      <button
+                        type='button'
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors focus:outline-none'
+                        aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}>
+                        <Icon icon={showConfirmPassword ? 'mdi:eye-off' : 'mdi:eye'} className='w-5 h-5' />
+                      </button>
+                    </div>
+                    {passwordMatchError && (
+                      <p className='mt-1 text-sm text-red-500'>{passwordMatchError}</p>
+                    )}
                   </div>
                   <div className='mb-4'>
                     <button
                       type='submit'
-                      className='flex w-full cursor-pointer items-center justify-center rounded-lg border border-primary bg-primary px-5 py-3 text-base font-medium text-white transition duration-300 ease-in-out hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'>
+                      disabled={loader || !isFormValid}
+                      className='flex w-full cursor-pointer items-center justify-center rounded-lg border border-primary bg-primary px-5 py-3 text-base font-medium text-white transition duration-300 ease-in-out hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:border-gray-400 disabled:hover:bg-gray-400'>
                       Save Password {loader && <Loader />}
                     </button>
                   </div>

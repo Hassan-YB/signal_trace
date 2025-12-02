@@ -165,21 +165,21 @@ const OTPVerification = ({
   }
 
   return (
-    <div className='rounded-xl border border-gray-200 bg-white p-8 shadow-sm'>
-      <div className='mb-8'>
-        <h2 className='text-2xl font-bold text-gray-900'>
+    <div className='rounded-xl border border-gray-200 bg-white p-[22px] shadow-sm'>
+      <div className='mb-[22px]'>
+        <h2 className='text-2xl font-bold text-gray-900 leading-none'>
           {otpType === 'signup' ? 'Verify Your Email' : 'Verify OTP'}
         </h2>
-        <p className='mt-2 text-sm text-gray-600'>
+        <p className='mt-[10px] text-sm text-gray-600'>
           We've sent a 6-digit OTP code to <span className='font-medium'>{email}</span>
         </p>
-        <p className='mt-1 text-sm text-gray-500'>
+        <p className='mt-[10px] text-sm text-gray-500'>
           Please enter the code below to {otpType === 'signup' ? 'complete your registration' : 'reset your password'}.
         </p>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div className='mb-6'>
+        <div className='mb-[22px]'>
           <div className='flex gap-2 justify-center'>
             {otp.map((digit, index) => (
               <input
@@ -197,16 +197,16 @@ const OTPVerification = ({
           </div>
         </div>
 
-        <div className='mb-6'>
+        <div className='mb-[22px]'>
           <button
             type='submit'
             disabled={loading || otp.join('').length !== 6}
-            className='flex w-full items-center justify-center rounded-lg border border-primary bg-primary px-5 py-3 text-base font-medium text-white transition duration-300 ease-in-out hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'>
+            className='flex w-full items-center justify-center rounded-lg border border-primary bg-primary px-5 py-3 text-base font-medium text-white transition duration-300 ease-in-out hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:border-gray-400 disabled:hover:bg-gray-400'>
             {otpType === 'signup' ? 'Verify & Create Account' : 'Verify OTP'} {loading && <Loader />}
           </button>
         </div>
 
-        <div className='text-center space-y-2'>
+        <div className='text-center space-y-[22px]'>
           <p className='text-sm text-gray-600'>
             Didn't receive the code?{' '}
             {canResend ? (

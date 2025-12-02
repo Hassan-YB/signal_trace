@@ -1,10 +1,11 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
 import { auth } from '@/lib/api'
 import { clearTokens, isAuthenticated, getRefreshToken } from '@/utils/api'
 import Loader from '@/app/components/Common/Loader'
+import PasswordStrengthMeter, { validatePasswordStrength } from '@/app/components/Common/PasswordStrengthMeter'
 import { Icon } from '@iconify/react/dist/iconify.js'
 
 interface User {
@@ -39,6 +40,41 @@ const ProfilePage = () => {
     new_password_confirm: false,
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [passwordMatchError, setPasswordMatchError] = useState<string>('')
+
+  // Real-time password matching validation
+  useEffect(() => {
+    if (passwordData.new_password_confirm && passwordData.new_password !== passwordData.new_password_confirm) {
+      setPasswordMatchError('Passwords do not match')
+    } else {
+      setPasswordMatchError('')
+    }
+  }, [passwordData.new_password, passwordData.new_password_confirm])
+
+  // Check if password change form is valid
+  const isPasswordFormValid = useMemo(() => {
+    if (!passwordData.old_password || !passwordData.new_password || !passwordData.new_password_confirm) {
+      return false
+    }
+
+    // Check password strength (must be strong - score >= 4)
+    const passwordStrength = validatePasswordStrength(
+      passwordData.new_password,
+      user?.email,
+      user?.first_name,
+      user?.last_name
+    )
+    if (passwordStrength.score < 4 || !passwordStrength.isValid) {
+      return false
+    }
+
+    // Check passwords match
+    if (passwordData.new_password !== passwordData.new_password_confirm) {
+      return false
+    }
+
+    return true
+  }, [passwordData, user])
 
   useEffect(() => {
     // Check authentication
@@ -379,6 +415,12 @@ const ProfilePage = () => {
                             <Icon icon={showPasswords.new_password ? 'mdi:eye-off' : 'mdi:eye'} className='w-5 h-5' />
                           </button>
                         </div>
+                        <PasswordStrengthMeter
+                          password={passwordData.new_password}
+                          email={user?.email}
+                          firstName={user?.first_name}
+                          lastName={user?.last_name}
+                        />
                         {errors.new_password && (
                           <p className='mt-1 text-sm text-red-500'>{errors.new_password}</p>
                         )}
@@ -395,7 +437,7 @@ const ProfilePage = () => {
                             value={passwordData.new_password_confirm}
                             onChange={handlePasswordChangeInput}
                             className={`w-full rounded-lg border border-solid bg-white px-4 py-3 pr-12 text-base text-gray-900 outline-none transition-all duration-200 border-gray-300 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                              errors.new_password_confirm ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                              errors.new_password_confirm || passwordMatchError ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
                             }`}
                           />
                           <button
@@ -406,6 +448,9 @@ const ProfilePage = () => {
                             <Icon icon={showPasswords.new_password_confirm ? 'mdi:eye-off' : 'mdi:eye'} className='w-5 h-5' />
                           </button>
                         </div>
+                        {passwordMatchError && (
+                          <p className='mt-1 text-sm text-red-500'>{passwordMatchError}</p>
+                        )}
                         {errors.new_password_confirm && (
                           <p className='mt-1 text-sm text-red-500'>{errors.new_password_confirm}</p>
                         )}
@@ -414,8 +459,8 @@ const ProfilePage = () => {
                       <div className='pt-4'>
                         <button
                           type='submit'
-                          disabled={loading}
-                          className='flex items-center justify-center rounded-lg border border-primary bg-primary px-6 py-3 text-base font-medium text-white transition duration-300 ease-in-out hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'>
+                          disabled={loading || !isPasswordFormValid}
+                          className='flex items-center justify-center rounded-lg border border-primary bg-primary px-6 py-3 text-base font-medium text-white transition duration-300 ease-in-out hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:border-gray-400 disabled:hover:bg-gray-400'>
                           {loading ? <Loader /> : 'Update'}
                         </button>
                       </div>

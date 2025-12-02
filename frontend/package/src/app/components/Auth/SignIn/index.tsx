@@ -1,7 +1,7 @@
 'use client'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import Loader from '@/app/components/Common/Loader'
@@ -21,6 +21,11 @@ const Signin = ({ onSuccess }: SigninProps) => {
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<{ email?: string; password?: string; non_field_errors?: string }>({})
+
+  // Check if form is valid
+  const isFormValid = useMemo(() => {
+    return !!(loginData.email && loginData.password)
+  }, [loginData.email, loginData.password])
 
   const loginUser = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -89,10 +94,10 @@ const Signin = ({ onSuccess }: SigninProps) => {
   }
 
   return (
-    <div className='rounded-xl border border-gray-200 bg-white p-8 shadow-sm'>
-      <div className='mb-8'>
-        <h2 className='text-2xl font-bold text-gray-900'>Sign In</h2>
-        <p className='mt-2 text-sm text-gray-600'>Welcome back! Please sign in to your account.</p>
+    <div className='rounded-xl border border-gray-200 bg-white p-[22px] shadow-sm'>
+      <div className='mb-[22px]'>
+        <h2 className='text-2xl font-bold text-gray-900 leading-none'>Sign In</h2>
+        <p className='mt-[10px] text-sm text-gray-600'>Welcome back! Please sign in to your account.</p>
       </div>
 
       <form onSubmit={loginUser}>
@@ -140,28 +145,28 @@ const Signin = ({ onSuccess }: SigninProps) => {
           )}
         </div>
         {errors.non_field_errors && (
-          <div className='mb-4'>
+          <div className='mb-[22px]'>
             <p className='text-sm text-red-500'>{errors.non_field_errors}</p>
           </div>
         )}
-        <div className='mb-4 flex justify-end'>
+        <div className='mb-[22px] flex justify-end'>
           <Link
             href='/forgotpassword'
             className='text-sm font-medium text-primary hover:text-primary/80 transition-colors'>
             Forgot Password?
           </Link>
         </div>
-        <div className='mb-9'>
+        <div className='mb-[22px]'>
           <button
             type='submit'
-            disabled={loading}
-            className='w-full rounded-lg border border-primary bg-primary px-5 py-3 text-base font-medium text-white transition duration-300 ease-in-out hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'>
+            disabled={loading || !isFormValid}
+            className='w-full rounded-lg border border-primary bg-primary px-5 py-3 text-base font-medium text-white transition duration-300 ease-in-out hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:border-gray-400 disabled:hover:bg-gray-400'>
             Sign In {loading && <Loader />}
           </button>
         </div>
       </form>
 
-      <div className='mt-6 text-center'>
+      <div className='mt-[22px] text-center'>
         <p className='text-sm text-gray-600'>
           Not a member yet?{' '}
           <Link href='/signup' className='font-medium text-primary hover:text-primary/80 transition-colors'>

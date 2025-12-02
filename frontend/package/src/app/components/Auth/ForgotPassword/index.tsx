@@ -1,6 +1,6 @@
 'use client'
 import React from 'react'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import toast from 'react-hot-toast'
 import { useRouter } from 'next/navigation'
 import { auth } from '@/lib/api'
@@ -11,6 +11,11 @@ const ForgotPassword = () => {
   const router = useRouter()
   const [email, setEmail] = useState('')
   const [loader, setLoader] = useState(false)
+
+  // Check if form is valid
+  const isFormValid = useMemo(() => {
+    return !!email && email.includes('@')
+  }, [email])
 
   const handleSubmit = async (e: any) => {
     e.preventDefault()
@@ -42,10 +47,10 @@ const ForgotPassword = () => {
   }
 
   return (
-    <div className='rounded-xl border border-gray-200 bg-white p-8 shadow-sm'>
-      <div className='mb-8'>
-        <h2 className='text-2xl font-bold text-gray-900'>Forgot Password</h2>
-        <p className='mt-2 text-sm text-gray-600'>Enter your email address and we'll send you a link to reset your password.</p>
+    <div className='rounded-xl border border-gray-200 bg-white p-[22px] shadow-sm'>
+      <div className='mb-[22px]'>
+        <h2 className='text-2xl font-bold text-gray-900 leading-none'>Forgot Password</h2>
+        <p className='mt-[10px] text-sm text-gray-600'>Enter your email address and we'll send you a link to reset your password.</p>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -60,17 +65,17 @@ const ForgotPassword = () => {
             className='w-full rounded-lg border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 outline-none transition-all duration-200 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20'
           />
         </div>
-        <div className='mb-9'>
+        <div className='mb-[22px]'>
           <button
             type='submit'
-            disabled={loader}
-            className='flex w-full cursor-pointer items-center justify-center rounded-lg border border-primary bg-primary px-5 py-3 text-base font-medium text-white transition duration-300 ease-in-out hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'>
+            disabled={loader || !isFormValid}
+            className='flex w-full cursor-pointer items-center justify-center rounded-lg border border-primary bg-primary px-5 py-3 text-base font-medium text-white transition duration-300 ease-in-out hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:border-gray-400 disabled:hover:bg-gray-400'>
             Send Email {loader && <Loader />}
           </button>
         </div>
       </form>
 
-      <div className='mt-6 text-center'>
+      <div className='mt-[22px] text-center'>
         <p className='text-sm text-gray-600'>
           Remember your password?{' '}
           <Link href='/signin' className='font-medium text-primary hover:text-primary/80 transition-colors'>

@@ -32,9 +32,9 @@ const VerifyPage = () => {
     return (
       <>
         <Breadcrumb pageName='Verify Email' />
-        <div className='min-h-screen bg-slate-100'>
-          <div className='container mx-auto px-4'>
-            <div className='flex justify-center items-center'>
+        <div className='bg-slate-100'>
+          <div className='container mx-auto px-4 pb-8'>
+            <div className='flex justify-center'>
               <div className='w-full max-w-md'>
                 <div className='rounded-xl border border-gray-200 bg-white p-8 shadow-sm'>
                   <p className='text-center text-gray-600'>Loading...</p>
@@ -50,9 +50,9 @@ const VerifyPage = () => {
   return (
     <>
       <Breadcrumb pageName='Verify Email' />
-      <div className='min-h-screen bg-slate-100 py-5'>
-        <div className='container mx-auto px-4'>
-          <div className='flex justify-center items-center py-10'>
+      <div className='bg-slate-100'>
+        <div className='container mx-auto px-4 pb-4'>
+          <div className='flex justify-center'>
             <div className='w-full max-w-md'>
               <VerifyOTPComponent email={email} />
             </div>
@@ -175,19 +175,19 @@ const VerifyOTPComponent = ({ email }: { email: string }) => {
   }
 
   return (
-    <div className='rounded-xl border border-gray-200 bg-white p-8 shadow-sm'>
-      <div className='mb-8'>
-        <h2 className='text-2xl font-bold text-gray-900'>Verify Your Email</h2>
-        <p className='mt-2 text-sm text-gray-600'>
+    <div className='rounded-xl border border-gray-200 bg-white p-[22px] shadow-sm'>
+      <div className='mb-[22px]'>
+        <h2 className='text-2xl font-bold text-gray-900 leading-none'>Verify Your Email</h2>
+        <p className='mt-[10px] text-sm text-gray-600'>
           We've sent a 6-digit OTP code to <span className='font-medium'>{email}</span>
         </p>
-        <p className='mt-1 text-sm text-gray-500'>
+        <p className='mt-[10px] text-sm text-gray-500'>
           Please enter the code below to activate your account.
         </p>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div className='mb-6'>
+        <div className='mb-[22px]'>
           <div className='flex gap-2 justify-center'>
             {otp.map((digit, index) => (
               <input
@@ -207,7 +207,7 @@ const VerifyOTPComponent = ({ email }: { email: string }) => {
           </div>
         </div>
 
-        <div className='mb-6'>
+        <div className='mb-[22px]'>
           <button
             type='submit'
             disabled={loading || otp.join('').length !== 6}

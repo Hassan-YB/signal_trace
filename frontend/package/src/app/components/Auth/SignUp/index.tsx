@@ -2,9 +2,10 @@
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import toast from 'react-hot-toast'
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Icon } from '@iconify/react/dist/iconify.js'
 import Loader from '@/app/components/Common/Loader'
+import PasswordStrengthMeter, { validatePasswordStrength } from '@/app/components/Common/PasswordStrengthMeter'
 import { auth } from '@/lib/api'
 
 interface SignUpProps {
@@ -31,6 +32,42 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
     password_confirm?: string
     non_field_errors?: string
   }>({})
+  const [passwordMatchError, setPasswordMatchError] = useState<string>('')
+
+  // Real-time password matching validation
+  useEffect(() => {
+    if (formData.password_confirm && formData.password !== formData.password_confirm) {
+      setPasswordMatchError('Passwords do not match')
+    } else {
+      setPasswordMatchError('')
+    }
+  }, [formData.password, formData.password_confirm])
+
+  // Check if form is valid
+  const isFormValid = useMemo(() => {
+    // Check required fields
+    if (!formData.first_name || !formData.last_name || !formData.email || !formData.password || !formData.password_confirm) {
+      return false
+    }
+
+    // Check password strength (must be strong - score >= 4)
+    const passwordStrength = validatePasswordStrength(
+      formData.password,
+      formData.email,
+      formData.first_name,
+      formData.last_name
+    )
+    if (passwordStrength.score < 4 || !passwordStrength.isValid) {
+      return false
+    }
+
+    // Check passwords match
+    if (formData.password !== formData.password_confirm) {
+      return false
+    }
+
+    return true
+  }, [formData])
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target
@@ -76,7 +113,7 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
         
         if (response.errors) {
           Object.keys(response.errors).forEach((key) => {
-            const errorValue = response.errors[key]
+            const errorValue = response.errors![key]
             if (Array.isArray(errorValue)) {
               fieldErrors[key as keyof typeof fieldErrors] = errorValue[0]
             } else if (typeof errorValue === 'string') {
@@ -107,10 +144,10 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
   }
 
   return (
-    <div className='rounded-xl border border-gray-200 bg-white p-8 shadow-sm'>
-      <div className='mb-8'>
-        <h2 className='text-2xl font-bold text-gray-900'>Sign Up</h2>
-        <p className='mt-2 text-sm text-gray-600'>Create a new account to get started.</p>
+    <div className='rounded-xl border border-gray-200 bg-white p-[22px] shadow-sm'>
+      <div className='mb-[22px]'>
+        <h2 className='text-2xl font-bold text-gray-900 leading-none'>Sign Up</h2>
+        <p className='mt-[10px] text-sm text-gray-600'>Create a new account to get started.</p>
       </div>
 
       <form onSubmit={handleSubmit}>
@@ -183,6 +220,12 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
               <Icon icon={showPassword ? 'mdi:eye-off' : 'mdi:eye'} className='w-5 h-5' />
             </button>
           </div>
+          <PasswordStrengthMeter
+            password={formData.password}
+            email={formData.email}
+            firstName={formData.first_name}
+            lastName={formData.last_name}
+          />
           {errors.password && (
             <p className='mt-1 text-sm text-red-500'>{errors.password}</p>
           )}
@@ -197,7 +240,7 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
               onChange={handleChange}
               required
               className={`w-full rounded-lg border border-solid bg-white px-4 py-3 pr-12 text-base text-gray-900 outline-none transition-all duration-200 border-gray-300 placeholder:text-gray-400 focus:border-primary focus:ring-2 focus:ring-primary/20 ${
-                errors.password_confirm ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
+                errors.password_confirm || passwordMatchError ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''
               }`}
             />
             <button
@@ -208,16 +251,19 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
               <Icon icon={showConfirmPassword ? 'mdi:eye-off' : 'mdi:eye'} className='w-5 h-5' />
             </button>
           </div>
+          {passwordMatchError && (
+            <p className='mt-1 text-sm text-red-500'>{passwordMatchError}</p>
+          )}
           {errors.password_confirm && (
             <p className='mt-1 text-sm text-red-500'>{errors.password_confirm}</p>
           )}
         </div>
         {errors.non_field_errors && (
-          <div className='mb-4'>
+          <div className='mb-[22px]'>
             <p className='text-sm text-red-500'>{errors.non_field_errors}</p>
           </div>
         )}
-        <div className='mb-4 text-center'>
+        <div className='mb-[22px] text-center'>
           <p className='text-sm text-gray-600'>
             By creating an account you agree with our{' '}
             <Link href='/#' className='font-medium text-primary hover:text-primary/80 transition-colors'>
@@ -229,17 +275,17 @@ const SignUp = ({ onSuccess }: SignUpProps) => {
             </Link>
           </p>
         </div>
-        <div className='mb-9'>
+        <div className='mb-[22px]'>
           <button
             type='submit'
-            disabled={loading}
-            className='flex w-full items-center justify-center rounded-lg border border-primary bg-primary px-5 py-3 text-base font-medium text-white transition duration-300 ease-in-out hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed'>
+            disabled={loading || !isFormValid}
+            className='flex w-full items-center justify-center rounded-lg border border-primary bg-primary px-5 py-3 text-base font-medium text-white transition duration-300 ease-in-out hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-gray-400 disabled:border-gray-400 disabled:hover:bg-gray-400'>
             Sign Up {loading && <Loader />}
           </button>
         </div>
       </form>
 
-      <div className='mt-6 text-center'>
+      <div className='mt-[22px] text-center'>
         <p className='text-sm text-gray-600'>
           Already have an account?{' '}
           <Link href='/signin' className='font-medium text-primary hover:text-primary/80 transition-colors'>
