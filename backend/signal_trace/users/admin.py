@@ -10,6 +10,7 @@ Provides a comprehensive admin interface for managing users with:
 """
 
 from django.contrib import admin
+from unfold.admin import ModelAdmin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.html import format_html
 from django.urls import reverse
@@ -19,13 +20,16 @@ from .models import User, OTP
 
 
 @admin.register(User)
-class UserAdmin(BaseUserAdmin):
+class UserAdmin(BaseUserAdmin, ModelAdmin):
     """
     Admin interface for User model.
     
     Extends Django's built-in UserAdmin with customizations
     for the custom User model.
     """
+    
+    # Unfold configuration
+    icon_name = "person"
     
     # List display configuration
     list_display = (
@@ -147,12 +151,15 @@ class UserAdmin(BaseUserAdmin):
 
 
 @admin.register(OTP)
-class OTPAdmin(admin.ModelAdmin):
+class OTPAdmin(ModelAdmin):
     """
     Admin interface for OTP model.
     
     Provides admin interface for viewing and managing OTP codes.
     """
+    
+    # Unfold configuration
+    icon_name = "lock"
     
     list_display = (
         'email',

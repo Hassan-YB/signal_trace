@@ -52,17 +52,19 @@ const ForgotPassword = () => {
               <div className="mb-10 text-center">
                 <Link href="/" className="mx-auto inline-block max-w-[160px]">
                   <Image
-                    src="/images/logo/logo.svg"
+                    src="/images/logo/logo.png"
                     alt="logo"
-                    width={140}
-                    height={30}
+                    width={120}
+                    height={50}
+                    style={{ width: "120px", height: "50px", objectFit: "contain" }}
                     className="dark:hidden"
                   />
                   <Image
-                    src="/images/logo/logo-white.svg"
+                    src="/images/logo/logo.png"
                     alt="logo"
-                    width={140}
-                    height={30}
+                    width={120}
+                    height={50}
+                    style={{ width: "120px", height: "50px", objectFit: "contain" }}
                     className="hidden dark:block"
                   />
                 </Link>

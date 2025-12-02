@@ -34,10 +34,11 @@ const Footer = () => {
           <div className='sm:col-span-6 lg:col-span-3'>
             <div className='flex shrink-0 items-center border-right'>
               <Image
-                src='/images/logo/logo-white.svg'
+                src='/images/logo/logo.png'
                 alt='logo'
-                width={214}
-                height={55}
+                width={120}
+                height={50}
+                style={{ width: '120px', height: '50px', objectFit: 'contain' }}
               />
             </div>
           </div>
