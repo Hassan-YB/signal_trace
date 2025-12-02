@@ -39,6 +39,8 @@ CORS_ALLOW_CREDENTIALS = True
 # Application definition
 
 INSTALLED_APPS = [
+    'unfold',  # Unfold must be before django.contrib.admin
+    'unfold.contrib.filters',  # Optional: Advanced filters
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -196,4 +198,56 @@ SIMPLE_JWT = {
     'USER_ID_CLAIM': 'user_id',
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
     'TOKEN_TYPE_CLAIM': 'token_type',
+}
+
+# Django Unfold Configuration
+from django.urls import reverse_lazy
+
+UNFOLD = {
+    "SITE_TITLE": "Signal Trace Administration",
+    "SITE_HEADER": "Signal Trace Administration",
+    "SITE_URL": "/",
+    "SITE_FAVICONS": [
+        {
+            "rel": "icon",
+            "type": "image/x-icon",
+            "href": f"{STATIC_URL}images/favicon/favicon.ico",
+        },
+    ],
+    "THEME": "light",  # Force light theme; disables theme switcher
+    "SIDEBAR": {
+        "show_search": True,
+        "show_all_applications": False,  # We'll define custom navigation
+        "navigation": [
+            {
+                "title": "Dashboard",
+                "separator": False,
+                "collapsible": False,
+                "items": [
+                    {
+                        "title": "Dashboard",
+                        "icon": "dashboard",
+                        "link": reverse_lazy("admin:index"),
+                    },
+                ],
+            },
+            {
+                "title": "Users",
+                "separator": True,
+                "collapsible": True,  # Makes the section collapsible
+                "items": [
+                    {
+                        "title": "Users",
+                        "icon": "person",
+                        "link": reverse_lazy("admin:users_user_changelist"),
+                    },
+                    {
+                        "title": "OTP Codes",
+                        "icon": "lock",
+                        "link": reverse_lazy("admin:users_otp_changelist"),
+                    },
+                ],
+            },
+        ],
+    },
 }

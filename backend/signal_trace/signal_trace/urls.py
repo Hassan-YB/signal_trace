@@ -19,8 +19,9 @@ from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
 
-admin.site.site_header = f'Signal Trace Administration'
-admin.site.index_title = 'Signal Trace'                
+# Admin site configuration (Unfold will handle the styling)
+admin.site.site_header = 'Signal Trace Administration'
+admin.site.index_title = 'Signal Trace'
 admin.site.site_title = 'Signal Trace'
 
 urlpatterns = [
