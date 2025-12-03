@@ -7,11 +7,8 @@ import { plansData } from '@/app/types/plans'
 import { footerlLinksData } from '@/app/types/footerlinks'
 
 const HeaderData: headerItem[] = [
-  { label: 'Product', href: '/#product' },
-  { label: 'Pricing', href: '/#pricing' },
-  { label: 'Features', href: '/#features ' },
-  { label: 'Contact Us', href: '/#contact ' },
-  { label: 'Docs', href: '/documentation' },
+  { label: 'Contact Us', href: '/contact-us' },
+  { label: 'Prospects', href: '/prospects', requireAuth: true },
 ]
 
 const FeatureData: featureData[] = [

@@ -104,9 +104,11 @@ const Header: React.FC = () => {
             <Logo />
           </div>
           <nav className='hidden lg:flex grow items-center gap-8 justify-start md:ml-20'>
-            {headerData.map((item, index) => (
-              <HeaderLink key={index} item={item} />
-            ))}
+            {headerData
+              .filter((item) => !item.requireAuth || authenticated)
+              .map((item, index) => (
+                <HeaderLink key={index} item={item} />
+              ))}
           </nav>
           <div className='flex items-center gap-4'>
             {authenticated ? (
@@ -160,9 +162,11 @@ const Header: React.FC = () => {
               aria-label='Close menu Modal'></button>
           </div>
           <nav className='flex flex-col items-start p-4'>
-            {headerData.map((item, index) => (
-              <MobileHeaderLink key={index} item={item} />
-            ))}
+            {headerData
+              .filter((item) => !item.requireAuth || authenticated)
+              .map((item, index) => (
+                <MobileHeaderLink key={index} item={item} />
+              ))}
             <div className='mt-4 flex flex-col gap-4 w-full'>
               {authenticated ? (
                 <Link

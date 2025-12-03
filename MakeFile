@@ -78,6 +78,15 @@ shell: ## Open Django shell
 createsuperuser: ## Create Django superuser
 	$(MANAGE) createsuperuser
 
+.PHONY: create-app
+create-app: ## Create a new Django app (usage: make create-app APP=appname)
+	@if [ -z "$(APP)" ]; then \
+		echo "Error: APP name is required. Usage: make create-app APP=appname"; \
+		exit 1; \
+	fi
+	$(MANAGE) startapp $(APP)
+	@echo "Django app '$(APP)' created successfully!"
+
 .PHONY: collectstatic
 collectstatic: ## Collect static files
 	$(MANAGE) collectstatic --noinput
@@ -142,3 +151,4 @@ up: run-d ## Alias for run-d
 
 .PHONY: ps
 ps: health ## Alias for health check
+

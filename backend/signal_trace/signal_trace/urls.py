@@ -27,6 +27,8 @@ admin.site.site_title = 'Signal Trace'
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('users.urls')),
+    path('', include('support.urls')),
+    path('', include('prospects.urls')),
 ]
 
 # Serve media files in development

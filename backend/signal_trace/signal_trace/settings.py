@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     # Local apps
     'users',
     'core',
+    'prospects',
+    'support',
 ]
 
 MIDDLEWARE = [
@@ -245,6 +247,40 @@ UNFOLD = {
                         "title": "OTP Codes",
                         "icon": "lock",
                         "link": reverse_lazy("admin:users_otp_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Support",
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Contact Messages",
+                        "icon": "mail",
+                        "link": reverse_lazy("admin:support_contactmessage_changelist"),
+                    },
+                ],
+            },
+            {
+                "title": "Prospects",
+                "separator": True,
+                "collapsible": True,
+                "items": [
+                    {
+                        "title": "Prospects",
+                        "icon": "people",
+                        "link": reverse_lazy("admin:prospects_prospect_changelist"),
+                    },
+                    {
+                        "title": "Enrichments",
+                        "icon": "database",
+                        "link": reverse_lazy("admin:prospects_prospectenrichment_changelist"),
+                    },
+                    {
+                        "title": "Signals",
+                        "icon": "notifications",
+                        "link": reverse_lazy("admin:prospects_signal_changelist"),
                     },
                 ],
             },

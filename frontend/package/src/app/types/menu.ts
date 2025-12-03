@@ -7,4 +7,5 @@ export type headerItem = {
   label: string
   href: string
   submenu?: submenuItem[]
+  requireAuth?: boolean
 }
